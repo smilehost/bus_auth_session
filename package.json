@@ -7,13 +7,15 @@
     "dev": "tsx watch src/cmd/main.ts",
     "build": "tsc",
     "start": "node dist/cmd/main.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@prisma/adapter-mariadb": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
