@@ -25,3 +25,4 @@ Thumbs.db
 
 # Lock file (optional: ถ้าไม่ต้องการ track)
 # package-lock.json
+dist/
