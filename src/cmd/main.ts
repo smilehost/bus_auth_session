@@ -1,7 +1,7 @@
 import express from 'express'
 import type { Express, Request, Response } from 'express'
 import dotenv from 'dotenv'
-import router from './route'
+import setupRoute from './route'
 
 dotenv.config()
 
@@ -15,6 +15,6 @@ app.get('/', (req: Request, res: Response) => {
     message: 'Hello Express + TypeScirpt!!'
   })
 })
-app.use('/api/v1', router)
+app.use('/api/v1', setupRoute())
 
 app.listen(port, () => console.log(`Application is running on port ${port}`))
