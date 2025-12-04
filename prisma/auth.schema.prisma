@@ -51,3 +51,25 @@ model auth_session {
 
   @@index([service_id])
 }
+
+model account {
+  account_id       Int      @id @default(autoincrement())
+  account_username String   @db.VarChar(255)
+  account_password String   @db.VarChar(255)
+  account_name     String?  @db.VarChar(255)
+  account_com_id   Int?
+  account_menu     String?  @db.VarChar(255)
+  account_status   String?  @db.VarChar(50)
+  account_role     Int?
+  company          company? @relation(fields: [account_com_id], references: [com_id], onDelete: Cascade, map: "account_ibfk_1")
+
+  @@index([account_com_id], map: "account_com_id")
+}
+
+model company {
+  com_id     Int       @id @default(autoincrement())
+  com_name   String    @db.VarChar(255)
+  com_prefix String?   @db.VarChar(100)
+  com_status Int?
+  account    account[]
+}
