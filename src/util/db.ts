@@ -1,5 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient as PrismaAuth } from '../generated/prisma/auth_client';
+import { PrismaClient as PrismaMass } from '../generated/prisma/mass_client';
 
-const prisma = new PrismaClient();
+const prismaAuth = new PrismaAuth();
+const prismaMass = new PrismaMass();
 
-export default prisma;
+export { prismaAuth, prismaMass };

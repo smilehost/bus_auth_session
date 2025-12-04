@@ -7,8 +7,9 @@
     "dev": "tsx watch src/cmd/main.ts",
     "build": "tsc",
     "start": "node dist/cmd/main.js",
-    "db:push": "prisma db push",
-    "db:generate": "prisma generate"
+    "db:push-auth": "npx prisma db push --schema=prisma/auth.schema.prisma",
+    "db:push-mass": "npx prisma db push --schema=prisma/mass.schema.prisma",
+    "db:generate": "npx prisma generate --schema=prisma/mass.schema.prisma & npx prisma generate --schema=prisma/auth.schema.prisma"
   },
   "keywords": [],
   "author": "",
