@@ -1,8 +1,12 @@
-import { Router } from "express";
-import AuthHandler from "../handler/auth.handler";
+import express from 'express'
 
-const router = Router();
+const setupRoute = async () =>{
+    const router = express.Router()
 
-router.get('/service/:serviceId', AuthHandler.getService);
+    router.get('/redirect', (req, res) => {})
+    router.post('/login', (req, res) => {})
+    router.post('/logout', (req, res) => {})
+    router.post('token')
 
-export default router;
+    return router
+}
