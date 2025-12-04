@@ -21,6 +21,7 @@ model service {
   onetime_tokens onetime_token[]
   auth_sessions  auth_session[]
   callback_url   String
+  logout_url     String?
   created_at     DateTime        @default(now())
   updated_at     DateTime        @updatedAt
 }
