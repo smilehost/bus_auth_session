@@ -53,11 +53,11 @@ model auth_session {
 }
 
 model account {
-  account_id       Int      @id @default(autoincrement())
+  account_id       String   @id @default(uuid())
   account_username String   @db.VarChar(255)
   account_password String   @db.VarChar(255)
   account_name     String?  @db.VarChar(255)
-  account_com_id   Int?
+  account_com_id   String?
   account_menu     String?  @db.VarChar(255)
   account_status   String?  @db.VarChar(50)
   account_role     Int?
@@ -67,7 +67,7 @@ model account {
 }
 
 model company {
-  com_id     Int       @id @default(autoincrement())
+  com_id     String    @id @default(uuid())
   com_name   String    @db.VarChar(255)
   com_prefix String?   @db.VarChar(100)
   com_status Int?
