@@ -1,5 +1,6 @@
 import express from 'express'
-import { RedirectReq } from '../dto/auth.dto'
+import { loginHtml } from './login'
+import { RedirectReq, LoginReq } from '../dto/auth.dto'
 
 const setupRoute = () => {
     const router = express.Router()
@@ -16,10 +17,38 @@ const setupRoute = () => {
         }
     })
 
+    router.get('/login', (req, res) => {
+        try {
+            res.setHeader('Content-Type', 'text/html');
+            res.send(loginHtml);
+        } catch (error) {
+            console.error('Error serving login page:', error);
+            res.status(500).json({
+                error: "Internal server error",
+                details: error instanceof Error ? error.message : "Unknown error"
+            });
+        }
+    })
+
     router.post('/login', (req, res) => {
-        res.json({
-            message: 'Hello Express + TypeScript!!'
-        })
+        try {
+            const validatedData = LoginReq.parse(req);
+            console.log('Login request data:', validatedData);
+            
+            // For now, just return the validated data
+            // In a real implementation, you would authenticate the user here
+            res.json({
+                message: 'Login data received',
+                data: validatedData,
+                redirectUrl: validatedData.callback + '?code=auth_code&state=' + validatedData.state
+            });
+        } catch (error) {
+            console.error('Login validation error:', error);
+            res.status(400).json({
+                error: "Invalid request data",
+                details: error instanceof Error ? error.message : "Unknown error"
+            });
+        }
     })
 
     router.post('/logout', (req, res) => {
