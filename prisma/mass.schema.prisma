@@ -1,0 +1,429 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../src/generated/prisma/mass_client"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("MASS_DATABASE_URL")
+}
+
+model account {
+    account_id       Int      @id @default(autoincrement())
+    account_username String   @db.VarChar(255)
+    account_password String   @db.VarChar(255)
+    account_name     String?  @db.VarChar(255)
+    account_com_id   Int?
+    account_menu     String?  @db.VarChar(255)
+    account_status   String?  @db.VarChar(50)
+    account_role     Int?
+    company          company? @relation(fields: [account_com_id], references: [com_id], onDelete: Cascade, map: "account_ibfk_1")
+
+    @@index([account_com_id], map: "account_com_id")
+}
+
+model bus {
+    bus_id                Int                @id @default(autoincrement())
+    bus_com_id            Int?
+    bus_name              String?            @db.VarChar(255)
+    bus_status            Int?
+    bus_created_at        DateTime           @default(now())
+    bus_device_id         String?            @unique @db.VarChar(100)
+    bus_updated_at        DateTime           @default(now())
+    current_layout_id     Int?
+    active_layout_version Int?
+    layouts               layouts?           @relation(fields: [current_layout_id], references: [id])
+    company               company?           @relation(fields: [bus_com_id], references: [com_id], onDelete: Cascade, map: "bus_ibfk_1")
+    busround              busround[]
+    card_transaction      card_transaction[]
+    scanbox               scanbox[]
+    transaction           transaction[]
+
+    @@index([bus_com_id], map: "bus_com_id")
+    @@index([current_layout_id], map: "bus_current_layout_id_fkey")
+}
+
+model busround {
+    busround_id               Int                @id @default(autoincrement())
+    busround_com_id           Int
+    busround_start            DateTime           @db.Timestamp(0)
+    busround_stop             DateTime?          @db.Timestamp(0)
+    busround_bus_id           Int
+    busround_driver_id        Int
+    busround_route_id         Int
+    busround_location_pre_id  Int?
+    busround_location_now_id  Int?
+    busround_location_next_id Int?
+    company                   company            @relation(fields: [busround_com_id], references: [com_id], onUpdate: Restrict, map: "busround_ibfk_1")
+    bus                       bus                @relation(fields: [busround_bus_id], references: [bus_id], onUpdate: Restrict, map: "busround_ibfk_2")
+    route                     route              @relation(fields: [busround_route_id], references: [route_id], onUpdate: Restrict, map: "busround_ibfk_3")
+    driver                    driver             @relation(fields: [busround_driver_id], references: [driver_id], onUpdate: Restrict, map: "busround_ibfk_4")
+    card_transaction          card_transaction[]
+    pax_rec                   pax_rec[]
+    transaction               transaction[]
+
+    @@index([busround_bus_id], map: "busround_bus_id")
+    @@index([busround_com_id], map: "busround_com_id")
+    @@index([busround_driver_id], map: "busround_driver_id")
+    @@index([busround_route_id], map: "busround_route_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model card {
+    card_id          Int                @id @default(autoincrement())
+    card_com_id      Int
+    card_qrcode      String             @db.VarChar(300)
+    card_hash        String             @db.VarChar(300)
+    card_create      String             @db.VarChar(300)
+    card_firstuse    String?            @db.VarChar(300)
+    card_lastuse     String?            @db.VarChar(300)
+    card_balance     Int
+    card_expire      String             @db.VarChar(300)
+    card_expire_date String?            @db.VarChar(300)
+    card_group_id    Int
+    card_type        Int
+    card_status      Int
+    company          company            @relation(fields: [card_com_id], references: [com_id], onUpdate: Restrict, map: "card_ibfk_1")
+    card_group       card_group         @relation(fields: [card_group_id], references: [card_group_id], onUpdate: Restrict, map: "card_ibfk_2")
+    card_transaction card_transaction[]
+
+    @@index([card_com_id], map: "card_com_id")
+    @@index([card_group_id], map: "card_group_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model card_group {
+    card_group_id                                                                          Int                      @id @default(autoincrement())
+    card_group_com_id                                                                      Int
+    card_group_prefix                                                                      String                   @db.VarChar(300)
+    card_group_name                                                                        String                   @db.VarChar(300)
+    card_group_price                                                                       Float
+    card_group_waiting_time                                                                String                   @db.VarChar(300)
+    card_group_connect_time_minutes                                                        String?                  @db.VarChar(8)
+    card_group_connect_enable                                                              Boolean                  @default(false)
+    card_group_connect_rule_id                                                             Int?
+    card_group_usable_route                                                                String                   @db.VarChar(300)
+    card_group_status                                                                      Int
+    card                                                                                   card[]
+    company                                                                                company                  @relation(fields: [card_group_com_id], references: [com_id], onUpdate: Restrict, map: "card_group_ibfk_1")
+    card_group_connect_rule_card_group_card_group_connect_rule_idTocard_group_connect_rule card_group_connect_rule? @relation("card_group_card_group_connect_rule_idTocard_group_connect_rule", fields: [card_group_connect_rule_id], references: [connect_rule_id], onUpdate: Restrict, map: "fk_card_group_connect_rule")
+    card_group_connect_rule_card_group_connect_rule_card_group_idTocard_group              card_group_connect_rule? @relation("card_group_connect_rule_card_group_idTocard_group")
+
+    @@index([card_group_com_id], map: "card_group_com_id")
+    @@index([card_group_connect_rule_id], map: "idx_card_group_connect_rule_id")
+}
+
+model card_group_connect_rule {
+    connect_rule_id                                                           Int                @id @default(autoincrement())
+    rule_com_id                                                               Int
+    card_group_id                                                             Int                @unique(map: "card_group_id")
+    require_same_company                                                      Boolean            @default(true)
+    terminate_on_outside_route                                                Boolean            @default(true)
+    min_seconds_between_taps                                                  Int                @default(3)
+    disallow_repeat_route_in_window                                           Boolean            @default(true)
+    created_at                                                                DateTime           @default(now()) @db.DateTime(0)
+    updated_at                                                                DateTime           @default(now()) @db.DateTime(0)
+    card_group_card_group_card_group_connect_rule_idTocard_group_connect_rule card_group[]       @relation("card_group_card_group_connect_rule_idTocard_group_connect_rule")
+    card_group_card_group_connect_rule_card_group_idTocard_group              card_group         @relation("card_group_connect_rule_card_group_idTocard_group", fields: [card_group_id], references: [card_group_id], onUpdate: Restrict, map: "fk_cgcr_card_group")
+    card_transaction                                                          card_transaction[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model card_transaction {
+    card_transaction_id              Int                      @id @default(autoincrement())
+    card_transaction_com_id          Int
+    card_transaction_date_time       DateTime                 @db.Timestamp(0)
+    card_transaction_lat             String                   @db.VarChar(300)
+    card_transaction_long            String                   @db.VarChar(300)
+    card_transaction_member_id       Int?
+    card_transaction_amount          String                   @db.VarChar(300)
+    card_transaction_pax             Int
+    card_transaction_bus_id          Int
+    card_transaction_card_id         Int
+    card_transaction_status          String                   @db.VarChar(300)
+    card_transaction_round_id        Int
+    card_transaction_note            String                   @db.VarChar(300)
+    card_transaction_connect_rule_id Int?
+    card_transaction_first_connect   DateTime?                @db.DateTime(0)
+    company                          company                  @relation(fields: [card_transaction_com_id], references: [com_id], onUpdate: Restrict, map: "card_transaction_ibfk_1")
+    bus                              bus                      @relation(fields: [card_transaction_bus_id], references: [bus_id], onUpdate: Restrict, map: "card_transaction_ibfk_2")
+    card                             card                     @relation(fields: [card_transaction_card_id], references: [card_id], onUpdate: Restrict, map: "card_transaction_ibfk_3")
+    busround                         busround                 @relation(fields: [card_transaction_round_id], references: [busround_id], onUpdate: Restrict, map: "card_transaction_ibfk_4")
+    card_group_connect_rule          card_group_connect_rule? @relation(fields: [card_transaction_connect_rule_id], references: [connect_rule_id], onUpdate: Restrict, map: "fk_ct_connect_rule")
+
+    @@index([card_transaction_bus_id], map: "card_transaction_bus_id")
+    @@index([card_transaction_com_id], map: "card_transaction_com_id")
+    @@index([card_transaction_round_id], map: "card_transaction_round_id")
+    @@index([card_transaction_card_id, card_transaction_first_connect, card_transaction_date_time], map: "idx_ct_card_first")
+    @@index([card_transaction_card_id, card_transaction_date_time], map: "idx_ct_card_time")
+    @@index([card_transaction_connect_rule_id], map: "idx_ct_connect_rule_id")
+}
+
+model categories_amount {
+    categories_amount_id         Int      @id @default(autoincrement())
+    categories_amount_finance_id Int
+    categories_amount_max        Int
+    categories_amount_price      Decimal? @db.Decimal(10, 2)
+}
+
+model company {
+    com_id           Int                @id @default(autoincrement())
+    com_name         String             @db.VarChar(255)
+    com_prefix       String?            @db.VarChar(100)
+    com_status       Int?
+    account          account[]
+    bus              bus[]
+    busround         busround[]
+    card             card[]
+    card_group       card_group[]
+    card_transaction card_transaction[]
+    company_detail   company_detail[]
+    driver           driver[]
+    layouts          layouts[]
+    pax_rec          pax_rec[]
+    payment_method   payment_method[]
+    route            route[]
+    route_location   route_location[]
+    scanbox          scanbox[]
+    transaction      transaction[]
+}
+
+model company_detail {
+    com_detail_id                            Int     @id @default(autoincrement())
+    com_detail_com_id                        Int
+    com_detail_app_version                   String? @db.VarChar(255)
+    com_detail_min_supported_version         String? @db.VarChar(255)
+    com_detail_apk_name                      String? @db.VarChar(255)
+    com_detail_scanbox_version               String? @db.VarChar(255)
+    com_detail_min_scanbox_supported_version String? @db.VarChar(255)
+    com_detail_scanbox_apk_name              String? @db.VarChar(255)
+    company                                  company @relation(fields: [com_detail_com_id], references: [com_id], onDelete: Cascade, map: "company_detail_ibfk_1")
+
+    @@index([com_detail_com_id], map: "com_detail_com_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model driver {
+    driver_id             Int        @id @default(autoincrement())
+    driver_com_id         Int
+    driver_name           String     @db.VarChar(300)
+    driver_status         Int
+    driver_account_id     Int
+    driver_account_qrcode String     @db.VarChar(300)
+    busround              busround[]
+    company               company    @relation(fields: [driver_com_id], references: [com_id], onUpdate: Restrict, map: "driver_ibfk_1")
+
+    @@index([driver_com_id], map: "driver_com_id")
+}
+
+model finance_categories {
+    finance_categories_id     Int    @id @default(autoincrement())
+    finance_categories_type   String @db.VarChar(255)
+    finance_categories_name   String @db.VarChar(255)
+    finance_categories_com_id Int
+    finance_categories_amount Int
+}
+
+model finance_entries {
+    finance_entries_id           Int      @id @default(autoincrement())
+    finance_entries_type         String   @db.VarChar(255)
+    finance_entries_com_id       Int
+    finance_entries_date         DateTime @db.DateTime(0)
+    finance_entries_amount       Decimal  @db.Decimal(12, 2)
+    finance_entries_category_id  Int
+    finance_entries_description  String   @db.VarChar(255)
+    finance_entries_source       String   @db.VarChar(255)
+    finance_entries_external_id  String?
+    finance_entries_quantity     Int
+    finance_entries_repair_start String?  @db.VarChar(255)
+    finance_entries_repair_stop  String?  @db.VarChar(255)
+}
+
+model layouts {
+    id               Int       @id @default(autoincrement())
+    company_id       Int?
+    name             String    @db.VarChar(255)
+    description      String?   @db.Text
+    width            Int       @default(1920)
+    height           Int       @default(1080)
+    background_color String    @default("#ffffff") @db.VarChar(7)
+    is_template      Boolean   @default(false)
+    thumbnail_url    String?   @db.VarChar(255)
+    created_at       DateTime  @default(now())
+    updated_at       DateTime  @default(now())
+    version          Int?      @default(1)
+    bus              bus[]
+    company          company?  @relation(fields: [company_id], references: [com_id], onDelete: Cascade, map: "layouts_ibfk_1")
+    widgets          widgets[]
+
+    @@index([company_id], map: "layouts_ibfk_1")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model pax_rec {
+    pax_rec_id          Int       @id @default(autoincrement())
+    pax_rec_com_id      Int?
+    pax_rec_location_id Int?
+    pax_rec_lat         String?   @db.VarChar(255)
+    pax_rec_long        String?   @db.VarChar(255)
+    pax_rec_count       Int?
+    pax_rec_type        Int?
+    pax_rec_round_id    Int?
+    pax_rec_bus_id      Int?
+    pax_rec_date_time   DateTime? @db.DateTime(0)
+    company             company?  @relation(fields: [pax_rec_com_id], references: [com_id], onDelete: Restrict, onUpdate: Restrict, map: "pax_rec_ibfk_1")
+    busround            busround? @relation(fields: [pax_rec_round_id], references: [busround_id], onDelete: Restrict, onUpdate: Restrict, map: "pax_rec_ibfk_2")
+
+    @@index([pax_rec_com_id], map: "pax_rec_com_id")
+    @@index([pax_rec_round_id], map: "pax_rec_round_id")
+}
+
+model payment_method {
+    payment_method_id     Int           @id @default(autoincrement())
+    payment_method_com_id Int
+    payment_method_name   String        @db.VarChar(300)
+    payment_method_status Int
+    payment_method_url    String        @db.VarChar(255)
+    company               company       @relation(fields: [payment_method_com_id], references: [com_id], onUpdate: Restrict, map: "payment_method_ibfk_1")
+    scanbox               scanbox[]
+    transaction           transaction[]
+
+    @@index([payment_method_com_id], map: "payment_method_com_id")
+}
+
+model route {
+    route_id          Int        @id @default(autoincrement())
+    route_name_th     String?    @db.VarChar(255)
+    route_name_en     String?    @db.VarChar(255)
+    route_status      Int?
+    route_com_id      Int?
+    route_array       String?    @db.VarChar(255)
+    route_color       String?    @db.VarChar(50)
+    price_1           Float
+    price_2           Float
+    price_3           Float
+    price_4           Float
+    route_mp3_start   String     @db.VarChar(100)
+    route_mp3_stop    String     @db.VarChar(100)
+    route_mp3_version String     @db.VarChar(100)
+    sound_1           Int
+    sound_2           Int
+    busround          busround[]
+    company           company?   @relation(fields: [route_com_id], references: [com_id], onDelete: Cascade, map: "route_ibfk_1")
+
+    @@index([route_com_id], map: "route_com_id")
+}
+
+model route_location {
+    route_location_id      Int     @id @default(autoincrement())
+    route_location_name    String  @db.VarChar(255)
+    route_location_name_en String  @db.VarChar(300)
+    lat                    String? @db.VarChar(100)
+    long                   String? @db.VarChar(100)
+    com_id                 Int
+    mp3                    String  @db.VarChar(11)
+    mp3_version            String  @db.VarChar(100)
+    company                company @relation(fields: [com_id], references: [com_id], onDelete: Cascade, map: "route_location_ibfk_1")
+
+    @@index([com_id], map: "com_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model route_stops {
+    route_stop_id  Int @id @default(autoincrement())
+    r_id           Int
+    stop_id        Int
+    stop_sequence  Int
+    route_id_index Int
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model scanbox {
+    scanbox_id                Int            @id @default(autoincrement())
+    scanbox_com_id            Int
+    scanbox_payment_method_id Int
+    scanbox_serial            String         @db.VarChar(300)
+    scanbox_promptpay_url     String         @db.VarChar(300)
+    scanbox_ads_url           String         @db.VarChar(300)
+    scanbox_current_price     Float
+    scanbox_bus_id            Int
+    scanbox_busround_latest   Int
+    scanbox_func              Int
+    last_connect              DateTime       @default(now()) @db.Timestamp(0)
+    scanbox_coins             Int?
+    payment_method            payment_method @relation(fields: [scanbox_payment_method_id], references: [payment_method_id], onUpdate: Restrict, map: "scanbox_ibfk_1")
+    company                   company        @relation(fields: [scanbox_com_id], references: [com_id], onUpdate: Restrict, map: "scanbox_ibfk_2")
+    bus                       bus            @relation(fields: [scanbox_bus_id], references: [bus_id], onUpdate: Restrict, map: "scanbox_ibfk_3")
+
+    @@index([scanbox_bus_id], map: "scanbox_bus_id")
+    @@index([scanbox_com_id], map: "scanbox_com_id")
+    @@index([scanbox_payment_method_id], map: "scanbox_payment_method_id")
+}
+
+model sound {
+    sound_id           Int      @id @default(autoincrement())
+    sound_file         String   @db.VarChar(255)
+    sound_com_id       Int
+    sound_file_status  Int
+    sound_file_created DateTime @default(now()) @db.Timestamp(0)
+    sound_name         String   @db.VarChar(255)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model subscription {
+    sub_id            Int      @id @default(autoincrement())
+    sub_com_id        Int
+    sub_name          String   @db.VarChar(300)
+    sub_cost          Float
+    sub_currenc       String   @db.VarChar(300)
+    sub_billing_cycle String   @db.VarChar(300)
+    sub_renewal_type  String   @db.VarChar(300)
+    sub_start_date    DateTime @db.DateTime(0)
+    sub_last_billed   DateTime @db.DateTime(0)
+    sub_next_due      DateTime @db.DateTime(0)
+    sub_status        String   @db.VarChar(300)
+    sub_note          String   @db.VarChar(300)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model transaction {
+    transaction_id                Int            @id @default(autoincrement())
+    transaction_com_id            Int
+    transaction_date_time         DateTime       @db.Timestamp(0)
+    transaction_lat               String         @db.VarChar(300)
+    transaction_long              String         @db.VarChar(300)
+    transaction_member_id         Int?
+    transaction_amount            String         @db.VarChar(300)
+    transaction_pax               Int
+    transaction_bus_id            Int
+    transaction_payment_method_id Int
+    transaction_status            String         @db.VarChar(300)
+    transaction_round_id          Int
+    transaction_note              String         @db.VarChar(300)
+    transaction_scanbox_func      Int
+    transaction_cardgroup_selling Int?
+    company                       company        @relation(fields: [transaction_com_id], references: [com_id], onUpdate: Restrict, map: "transaction_ibfk_1")
+    bus                           bus            @relation(fields: [transaction_bus_id], references: [bus_id], onUpdate: Restrict, map: "transaction_ibfk_2")
+    busround                      busround       @relation(fields: [transaction_round_id], references: [busround_id], onUpdate: Restrict, map: "transaction_ibfk_3")
+    payment_method                payment_method @relation(fields: [transaction_payment_method_id], references: [payment_method_id], onUpdate: Restrict, map: "transaction_ibfk_4")
+
+    @@index([transaction_bus_id], map: "transaction_bus_id")
+    @@index([transaction_com_id], map: "transaction_com_id")
+    @@index([transaction_payment_method_id], map: "transaction_payment_method_id")
+    @@index([transaction_round_id], map: "transaction_round_id")
+}
+
+model widgets {
+    id         Int     @id @default(autoincrement())
+    layout_id  Int
+    type       String  @db.VarChar(50)
+    x          Int     @default(0)
+    y          Int     @default(0)
+    width      Int     @default(100)
+    height     Int     @default(100)
+    z_index    Int     @default(1)
+    properties String  @db.LongText
+    layouts    layouts @relation(fields: [layout_id], references: [id], onDelete: Cascade, map: "widgets_ibfk_1")
+
+    @@index([layout_id], map: "widgets_ibfk_1")
+}

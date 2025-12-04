@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma/auth_client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("AUTH_DATABASE_URL")
+}
+
+// Define your database models here and run `prisma migrate dev` to create migrations for your database.
+model service {
+  service_id     Int             @id @default(autoincrement())
+  service_name   String          @unique
+  onetime_tokens onetime_token[]
+  auth_sessions  auth_session[]
+  callback_url   String
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+}
+
+model onetime_token {
+  token      String   @id
+  service_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  service    service  @relation(fields: [service_id], references: [service_id], onDelete: Cascade)
+
+  @@index([service_id])
+}
+
+model auth_session {
+  session_id  String    @id
+  service_id  Int
+  user_id     Int
+  user_agent  String?
+  ip_address  String?
+  expires_at  DateTime
+  revoked_at  DateTime?
+  replaced_by Int?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  service     service   @relation(fields: [service_id], references: [service_id], onDelete: Cascade)
+
+  @@index([service_id])
+}
