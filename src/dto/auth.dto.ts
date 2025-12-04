@@ -21,15 +21,15 @@ export type RedirectRes = {
 // POST /login
 export const LoginReq = z.object({
     body: z.object({
-        callback: z.url(),
-        from: z.coerce.number(),
+        callback: z.url().nullish().or(z.literal('')),
+        from: z.coerce.number().nullish(),
         state: z.string(),
         username: z.string(),
         password: z.string()
     })
 }).transform(req => ({
-    callback: req.body.callback,
-    serviceID: req.body.from,
+    callback: req.body.callback || null,
+    serviceID: req.body.from || null,
     state: req.body.state,
     username: req.body.username,
     password: req.body.password
